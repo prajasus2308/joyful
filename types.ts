@@ -11,4 +11,6 @@ export interface GeneratedContent {
   title: string;
   text: string;
   timestamp: number;
+  rating?: number; // 1-5 stars
+  config?: StoryConfig; // The parameters used to generate this story
 }

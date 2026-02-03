@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StoryConfig, GeneratedContent } from '../types';
 import { generateStoryContent } from '../services/geminiService';
 
@@ -7,6 +7,8 @@ interface AIStoryLabProps {
   onBack: () => void;
   onEarnXP: (amount: number) => void;
 }
+
+type SortOption = 'newest' | 'rating';
 
 const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
   const [config, setConfig] = useState<StoryConfig>({
@@ -19,6 +21,9 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
   
   // Initialize history from localStorage
   const [history, setHistory] = useState<GeneratedContent[]>(() => {
@@ -52,10 +57,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
       const newContent: GeneratedContent = {
         title: config.topic.length > 30 ? config.topic.substring(0, 30) + '...' : config.topic,
         text: result,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        rating: 0,
+        config: { ...config } // Store a snapshot of the config
       };
       
-      // Prepends to history, which triggers the useEffect to save to localStorage
       setHistory([newContent, ...history]);
       onEarnXP(50);
       showToast("Magic Created & Saved! +50 XP");
@@ -76,6 +82,12 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
     showToast("Story removed from library.");
   };
 
+  const handleClearAll = () => {
+    setHistory([]);
+    setShowClearConfirm(false);
+    showToast("Library cleared! Time for new magic.");
+  };
+
   const handleShare = async (item: GeneratedContent) => {
     if (navigator.share) {
       try {
@@ -92,6 +104,50 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
       showToast("Sharing not supported - copied text instead!");
     }
   };
+
+  const handleSetRating = (timestamp: number, rating: number) => {
+    setHistory(prev => prev.map(item => 
+      item.timestamp === timestamp ? { ...item, rating } : item
+    ));
+    showToast(`Rated ${rating} stars! 🌟`);
+  };
+
+  const handleReloadConfig = (oldConfig: StoryConfig) => {
+    setConfig({ ...oldConfig });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast("Magic settings restored! 🪄");
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateReadingTime = (text: string) => {
+    const words = text.split(/\s+/).length;
+    const time = Math.ceil(words / 200); // Average 200 wpm
+    return { words, time };
+  };
+
+  // Memoized filtered and sorted history
+  const filteredHistory = useMemo(() => {
+    let result = history.filter(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.text.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (sortBy === 'rating') {
+      result = [...result].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else {
+      result = [...result].sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    return result;
+  }, [history, searchQuery, sortBy]);
 
   return (
     <section className="px-6 py-12 md:py-20 min-h-screen bg-[#fff9eb] dark:bg-background-dark">
@@ -225,78 +281,169 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
             </div>
           </div>
 
-          {/* Result Panel */}
+          {/* Result Panel / History Library */}
           <div className="flex flex-col gap-6">
-            <h3 className="text-2xl font-black text-[#0d171c] dark:text-white flex items-center justify-between px-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">history</span>
-                Your Library
-              </div>
-              <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Saved in Browser</span>
-            </h3>
-            
-            <div className="flex-1 space-y-6 overflow-y-auto max-h-[750px] pr-2 custom-scrollbar pb-10">
-              {history.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-[#49819c] bg-white dark:bg-white/5 rounded-[3rem] border-2 border-dashed border-primary/20 overflow-hidden px-10 shadow-inner">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
-                    <span className="material-symbols-outlined text-5xl">edit_note</span>
+            <div className="flex flex-col gap-4">
+              <h3 className="text-2xl font-black text-[#0d171c] dark:text-white flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">history</span>
+                  Magic Library
+                  <span className="ml-2 text-xs font-black bg-primary/10 text-primary px-3 py-1 rounded-full">{history.length}</span>
+                </div>
+                
+                {history.length > 0 && (
+                  <div className="flex gap-2">
+                    {showClearConfirm ? (
+                      <div className="flex gap-2 animate-in slide-in-from-right">
+                        <button onClick={handleClearAll} className="text-[10px] font-black bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600">YES, CLEAR</button>
+                        <button onClick={() => setShowClearConfirm(false)} className="text-[10px] font-black bg-gray-200 text-gray-600 px-3 py-1 rounded-full">CANCEL</button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setShowClearConfirm(true)}
+                        className="text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest border border-gray-200 px-3 py-1 rounded-full transition-colors"
+                      >
+                        Clear All
+                      </button>
+                    )}
                   </div>
-                  <p className="font-black text-2xl mb-2 text-[#0d171c] dark:text-white">Empty Library</p>
-                  <p className="max-w-[300px] mx-auto opacity-70 mb-10 font-medium">Use the lab to start your first story or book chapter!</p>
-                  <div className="w-full max-w-[420px] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white dark:border-white/10 group transition-transform hover:scale-[1.02]">
-                    <img 
-                      src="https://images.unsplash.com/photo-1543004218-ee1411049754?auto=format&fit=crop&q=80&w=1000" 
-                      alt="Dreamy library" 
-                      className="w-full h-64 object-cover opacity-95 grayscale-[20%]" 
+                )}
+              </h3>
+
+              {/* History Search & Filter Bar */}
+              {history.length > 0 && (
+                <div className="flex flex-col sm:flex-row gap-3 px-2">
+                  <div className="relative flex-1">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 text-lg">search</span>
+                    <input 
+                      type="text"
+                      placeholder="Search your stories..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-primary/10 focus:border-primary outline-none bg-white dark:bg-white/5 text-sm font-bold transition-all"
                     />
                   </div>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="px-4 py-3 rounded-xl border-2 border-primary/10 bg-white dark:bg-white/5 text-xs font-black uppercase tracking-wider text-[#49819c] outline-none cursor-pointer hover:border-primary transition-all appearance-none pr-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyMCAyMCIgc3Ryb2tlPSIjNDk4MTljIiBzdHJva2Utd2lkdGg9IjEuNSI+PHBhdGggc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBkPSJNNiA4bDQgNCA0LTQiLz48L3N2Zz4=')] bg-no-repeat bg-[right_0.75rem_center] bg-[length:1.25rem]"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="rating">Highest Rated</option>
+                  </select>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex-1 space-y-6 overflow-y-auto max-h-[700px] pr-2 custom-scrollbar pb-10">
+              {filteredHistory.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center text-[#49819c] bg-white dark:bg-white/5 rounded-[3rem] border-2 border-dashed border-primary/20 overflow-hidden px-10 shadow-inner">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
+                    <span className="material-symbols-outlined text-5xl">
+                      {searchQuery ? 'search_off' : 'edit_note'}
+                    </span>
+                  </div>
+                  <p className="font-black text-2xl mb-2 text-[#0d171c] dark:text-white">
+                    {searchQuery ? 'No Matches Found' : 'Empty Library'}
+                  </p>
+                  <p className="max-w-[300px] mx-auto opacity-70 mb-10 font-medium">
+                    {searchQuery ? `We couldn't find any stories matching "${searchQuery}".` : 'Use the lab to start your first story or book chapter!'}
+                  </p>
+                  {!searchQuery && (
+                    <div className="w-full max-w-[420px] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white dark:border-white/10 group transition-transform hover:scale-[1.02]">
+                      <img 
+                        src="https://images.unsplash.com/photo-1543004218-ee1411049754?auto=format&fit=crop&q=80&w=1000" 
+                        alt="Dreamy library" 
+                        className="w-full h-64 object-cover opacity-95 grayscale-[20%]" 
+                      />
+                    </div>
+                  )}
                 </div>
               ) : (
-                history.map((item) => (
-                  <div key={item.timestamp} className="bg-white dark:bg-white/5 p-10 rounded-[2rem] shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500 hover:shadow-xl transition-all group/card">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex flex-col">
-                        <h4 className="text-2xl font-black text-primary leading-tight">{item.title}</h4>
-                        <span className="text-[10px] font-bold text-gray-400 mt-1">ID: {item.timestamp}</span>
+                filteredHistory.map((item) => {
+                  const { words, time } = calculateReadingTime(item.text);
+                  return (
+                    <div key={item.timestamp} className="bg-white dark:bg-white/5 p-8 rounded-[2rem] shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500 hover:shadow-xl transition-all group/card">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex flex-col flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-xl font-black text-primary leading-tight truncate max-w-[200px] sm:max-w-none">{item.title}</h4>
+                            <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{formatDate(item.timestamp)}</span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <span className="px-2 py-0.5 bg-gray-50 dark:bg-white/5 text-gray-400 text-[9px] font-black rounded-md border border-gray-100 dark:border-white/10 uppercase">
+                              {words} words • {time} min read
+                            </span>
+                            {item.config && (
+                              <>
+                                <span className="px-2 py-0.5 bg-primary/5 text-primary text-[9px] font-black rounded-md border border-primary/10 uppercase">{item.config.tone}</span>
+                                <span className="px-2 py-0.5 bg-accent-pink/5 text-accent-pink text-[9px] font-black rounded-md border border-accent-pink/10 uppercase">{item.config.length}</span>
+                              </>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => handleSetRating(item.timestamp, star)}
+                                className={`material-symbols-outlined text-lg transition-all hover:scale-125 ${
+                                  (item.rating || 0) >= star ? 'text-accent-yellow' : 'text-gray-200 dark:text-gray-600'
+                                }`}
+                                style={{ fontVariationSettings: `'FILL' ${(item.rating || 0) >= star ? 1 : 0}` }}
+                              >
+                                star
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          {item.config && (
+                            <button 
+                              onClick={() => handleReloadConfig(item.config!)}
+                              className="w-8 h-8 rounded-full bg-primary/5 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all opacity-0 group-hover/card:opacity-100"
+                              title="Restore Settings"
+                            >
+                              <span className="material-symbols-outlined text-sm">settings_backup_restore</span>
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDelete(item.timestamp)}
+                            className="w-8 h-8 rounded-full bg-red-50 text-red-300 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover/card:opacity-100"
+                            title="Delete"
+                          >
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                          </button>
+                        </div>
                       </div>
-                      <button 
-                        onClick={() => handleDelete(item.timestamp)}
-                        className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover/card:opacity-100"
-                        title="Delete Story"
-                      >
-                        <span className="material-symbols-outlined">delete_sweep</span>
-                      </button>
+
+                      <div className="prose prose-blue dark:prose-invert max-w-none">
+                        <p className="text-base leading-relaxed text-[#49819c] dark:text-gray-300 whitespace-pre-wrap font-medium line-clamp-4 group-hover/card:line-clamp-none transition-all duration-700">
+                          {item.text}
+                        </p>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-gray-50 dark:border-white/5 flex flex-wrap gap-4">
+                        <button 
+                          onClick={() => handleCopy(item.text)}
+                          className="flex items-center gap-1.5 text-[11px] font-black text-primary hover:text-accent-pink transition-colors group/btn"
+                        >
+                          <span className="material-symbols-outlined text-base group-hover/btn:scale-110 transition-transform">content_copy</span>
+                          Copy
+                        </button>
+                        <button 
+                          onClick={() => handleShare(item)}
+                          className="flex items-center gap-1.5 text-[11px] font-black text-primary hover:text-accent-pink transition-colors group/btn"
+                        >
+                          <span className="material-symbols-outlined text-base group-hover/btn:scale-110 transition-transform">share</span>
+                          Share
+                        </button>
+                      </div>
                     </div>
-                    <div className="prose prose-blue dark:prose-invert max-w-none">
-                      <p className="text-lg leading-relaxed text-[#49819c] dark:text-gray-300 whitespace-pre-wrap font-medium font-serif italic">
-                        {item.text}
-                      </p>
-                    </div>
-                    <div className="mt-10 pt-6 border-t border-gray-100 dark:border-white/10 flex flex-wrap gap-6">
-                      <button 
-                        onClick={() => handleCopy(item.text)}
-                        className="flex items-center gap-2 text-sm font-black text-primary hover:text-accent-pink transition-colors group"
-                      >
-                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">content_copy</span>
-                        Copy Text
-                      </button>
-                      <button 
-                        onClick={() => handleShare(item)}
-                        className="flex items-center gap-2 text-sm font-black text-primary hover:text-accent-pink transition-colors group"
-                      >
-                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">share</span>
-                        Share Story
-                      </button>
-                      <button 
-                        onClick={() => showToast("Already stored safely in your magic library! ✨")}
-                        className="flex items-center gap-2 text-sm font-black text-emerald-500 hover:text-emerald-600 transition-colors group"
-                      >
-                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">bookmark_added</span>
-                        Save Story
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
