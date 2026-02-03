@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { StoryConfig, GeneratedContent } from '../types';
 import { generateStoryContent } from '../services/geminiService';
 
@@ -24,7 +24,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [isListening, setIsListening] = useState<string | null>(null); // track which field is being dictated
   
+  // Speech Recognition Ref
+  const recognitionRef = useRef<any>(null);
+
   // Initialize history from localStorage
   const [history, setHistory] = useState<GeneratedContent[]>(() => {
     const saved = localStorage.getItem('joyful_stories');
@@ -38,9 +42,97 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
     localStorage.setItem('joyful_stories', JSON.stringify(history));
   }, [history]);
 
+  // Setup Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        const field = recognition.activeField;
+        if (field) {
+          setConfig(prev => ({ ...prev, [field]: transcript }));
+          showToast(`Heard: "${transcript}"`);
+        }
+        setIsListening(null);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech Recognition Error:", event.error);
+        setIsListening(null);
+        
+        switch (event.error) {
+          case 'network':
+            showToast("Network error! Voice magic needs the internet. 🌐");
+            break;
+          case 'not-allowed':
+            showToast("Microphone access denied! Check browser settings. 🎙️");
+            break;
+          case 'no-speech':
+            showToast("Didn't hear anything! Try again. 👂");
+            break;
+          case 'service-not-allowed':
+            showToast("Voice service not available. Try another browser! 🦊");
+            break;
+          default:
+            showToast(`Voice error: ${event.error}. Let's type instead! ⌨️`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(null);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const handleStartListening = (field: keyof StoryConfig) => {
+    if (!recognitionRef.current) {
+      showToast("Voice input is not supported in this browser. Try Chrome! 🚀");
+      return;
+    }
+
+    if (!navigator.onLine) {
+      showToast("Voice needs internet! Check your connection. 🌐");
+      return;
+    }
+
+    if (isListening === field) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.error("Error stopping recognition:", e);
+      }
+      setIsListening(null);
+    } else {
+      // If already listening to another field, stop it first
+      if (isListening) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+
+      setIsListening(field);
+      recognitionRef.current.activeField = field;
+      
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.error("Error starting recognition:", e);
+        setIsListening(null);
+        showToast("Oops! The voice portal didn't open. 🪄");
+      }
+    }
+  };
+
   const showToast = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const handleGenerate = async () => {
@@ -153,7 +245,7 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
     <section className="px-6 py-12 md:py-20 min-h-screen bg-[#fff9eb] dark:bg-background-dark">
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-primary text-white px-8 py-3 rounded-full font-black shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-2">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-primary text-white px-8 py-3 rounded-full font-black shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-2 text-center">
           <span className="material-symbols-outlined text-lg">magic_button</span>
           {toast}
         </div>
@@ -180,41 +272,68 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
             
             <div>
               <h2 className="text-3xl font-black text-primary mb-2">Magic Story Lab</h2>
-              <p className="text-[#49819c] font-medium">What magic will you write today?</p>
+              <p className="text-[#49819c] font-medium text-sm">Dictate or type your magic ideas! 🎙️</p>
             </div>
 
             <div className="space-y-6">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-black uppercase tracking-widest text-[#0d171c] dark:text-gray-300 mb-2">What's the story about?</label>
-                <input 
-                  type="text" 
-                  value={config.topic}
-                  onChange={(e) => setConfig({...config, topic: e.target.value})}
-                  placeholder="e.g., A robot who discovers a secret forest"
-                  className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary focus:ring-0 transition-all text-lg font-medium dark:bg-background-dark dark:border-white/10"
-                />
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={config.topic}
+                    onChange={(e) => setConfig({...config, topic: e.target.value})}
+                    placeholder="e.g., A robot who discovers a secret forest"
+                    className="w-full p-5 pr-16 rounded-2xl border-2 border-primary/20 focus:border-primary focus:ring-0 transition-all text-lg font-medium dark:bg-background-dark dark:border-white/10"
+                  />
+                  <button 
+                    onClick={() => handleStartListening('topic')}
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening === 'topic' ? 'bg-red-500 text-white animate-pulse' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
+                    title="Speak Topic"
+                  >
+                    <span className="material-symbols-outlined">{isListening === 'topic' ? 'mic' : 'mic_none'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-black uppercase tracking-widest text-[#0d171c] dark:text-gray-300 mb-2">Main Characters</label>
-                  <input 
-                    type="text" 
-                    value={config.characters}
-                    onChange={(e) => setConfig({...config, characters: e.target.value})}
-                    placeholder="e.g., Sparky the robot"
-                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
-                  />
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={config.characters}
+                      onChange={(e) => setConfig({...config, characters: e.target.value})}
+                      placeholder="e.g., Sparky the robot"
+                      className="w-full p-5 pr-14 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    />
+                    <button 
+                      onClick={() => handleStartListening('characters')}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${isListening === 'characters' ? 'bg-red-500 text-white animate-pulse' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
+                      title="Speak Characters"
+                    >
+                      <span className="material-symbols-outlined text-lg">{isListening === 'characters' ? 'mic' : 'mic_none'}</span>
+                    </button>
+                  </div>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-black uppercase tracking-widest text-[#0d171c] dark:text-gray-300 mb-2">The Setting</label>
-                  <input 
-                    type="text" 
-                    value={config.setting}
-                    onChange={(e) => setConfig({...config, setting: e.target.value})}
-                    placeholder="e.g., Planet Zog"
-                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
-                  />
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={config.setting}
+                      onChange={(e) => setConfig({...config, setting: e.target.value})}
+                      placeholder="e.g., Planet Zog"
+                      className="w-full p-5 pr-14 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    />
+                    <button 
+                      onClick={() => handleStartListening('setting')}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${isListening === 'setting' ? 'bg-red-500 text-white animate-pulse' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
+                      title="Speak Setting"
+                    >
+                      <span className="material-symbols-outlined text-lg">{isListening === 'setting' ? 'mic' : 'mic_none'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
