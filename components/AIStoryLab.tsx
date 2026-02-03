@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StoryConfig, GeneratedContent } from '../types';
 import { generateStoryContent } from '../services/geminiService';
 
@@ -19,8 +19,19 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<GeneratedContent[]>([]);
+  
+  // Initialize history from localStorage
+  const [history, setHistory] = useState<GeneratedContent[]>(() => {
+    const saved = localStorage.getItem('joyful_stories');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [toast, setToast] = useState<string | null>(null);
+
+  // Persist history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('joyful_stories', JSON.stringify(history));
+  }, [history]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -43,9 +54,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
         text: result,
         timestamp: Date.now()
       };
+      
+      // Prepends to history, which triggers the useEffect to save to localStorage
       setHistory([newContent, ...history]);
       onEarnXP(50);
-      showToast("Magic Created! +50 XP");
+      showToast("Magic Created & Saved! +50 XP");
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -56,6 +69,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     showToast("Story copied to clipboard! ✨");
+  };
+
+  const handleDelete = (timestamp: number) => {
+    setHistory(history.filter(item => item.timestamp !== timestamp));
+    showToast("Story removed from library.");
   };
 
   const handleShare = async (item: GeneratedContent) => {
@@ -214,7 +232,7 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                 <span className="material-symbols-outlined text-primary">history</span>
                 Your Library
               </div>
-              <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Saved to Local</span>
+              <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">Saved in Browser</span>
             </h3>
             
             <div className="flex-1 space-y-6 overflow-y-auto max-h-[750px] pr-2 custom-scrollbar pb-10">
@@ -235,19 +253,26 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                 </div>
               ) : (
                 history.map((item) => (
-                  <div key={item.timestamp} className="bg-white dark:bg-white/5 p-10 rounded-[2rem] shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500 hover:shadow-xl transition-all">
+                  <div key={item.timestamp} className="bg-white dark:bg-white/5 p-10 rounded-[2rem] shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500 hover:shadow-xl transition-all group/card">
                     <div className="flex justify-between items-start mb-6">
-                      <h4 className="text-2xl font-black text-primary leading-tight">{item.title}</h4>
-                      <span className="text-xs font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-white/5 px-3 py-1 rounded-full shrink-0">
-                        {new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                      </span>
+                      <div className="flex flex-col">
+                        <h4 className="text-2xl font-black text-primary leading-tight">{item.title}</h4>
+                        <span className="text-[10px] font-bold text-gray-400 mt-1">ID: {item.timestamp}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleDelete(item.timestamp)}
+                        className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover/card:opacity-100"
+                        title="Delete Story"
+                      >
+                        <span className="material-symbols-outlined">delete_sweep</span>
+                      </button>
                     </div>
                     <div className="prose prose-blue dark:prose-invert max-w-none">
                       <p className="text-lg leading-relaxed text-[#49819c] dark:text-gray-300 whitespace-pre-wrap font-medium font-serif italic">
                         {item.text}
                       </p>
                     </div>
-                    <div className="mt-10 pt-6 border-t border-gray-100 dark:border-white/10 flex gap-6">
+                    <div className="mt-10 pt-6 border-t border-gray-100 dark:border-white/10 flex flex-wrap gap-6">
                       <button 
                         onClick={() => handleCopy(item.text)}
                         className="flex items-center gap-2 text-sm font-black text-primary hover:text-accent-pink transition-colors group"
@@ -261,6 +286,13 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                       >
                         <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">share</span>
                         Share Story
+                      </button>
+                      <button 
+                        onClick={() => showToast("Already stored safely in your magic library! ✨")}
+                        className="flex items-center gap-2 text-sm font-black text-emerald-500 hover:text-emerald-600 transition-colors group"
+                      >
+                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">bookmark_added</span>
+                        Save Story
                       </button>
                     </div>
                   </div>
