@@ -47,10 +47,10 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
   };
 
   return (
-    <section className="px-6 py-12 md:py-20 min-h-screen bg-background-light dark:bg-background-dark">
+    <section className="px-6 py-12 md:py-20 min-h-screen bg-[#fff9eb] dark:bg-background-dark">
       <div className="mx-auto max-w-[1200px]">
         {/* Breadcrumbs / Back */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-10">
           <button 
             onClick={onBack}
             className="flex items-center gap-2 text-primary font-bold hover:underline"
@@ -65,7 +65,9 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Creator Panel */}
-          <div className="flex flex-col gap-8 bg-white dark:bg-white/5 p-8 rounded-2xl shadow-xl border-2 border-primary/10">
+          <div className="flex flex-col gap-8 bg-white dark:bg-white/5 p-10 rounded-[2.5rem] shadow-xl border-2 border-primary/10 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+            
             <div>
               <h2 className="text-3xl font-black text-primary mb-2">Magic Story Lab</h2>
               <p className="text-[#49819c] font-medium">Use the power of AI to write your next adventure in 2026!</p>
@@ -79,11 +81,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                   value={config.topic}
                   onChange={(e) => setConfig({...config, topic: e.target.value})}
                   placeholder="e.g., A robot who discovers a secret forest"
-                  className="w-full p-4 rounded-xl border-2 border-primary/20 focus:border-primary focus:ring-0 transition-all text-lg font-medium dark:bg-background-dark dark:border-white/10"
+                  className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary focus:ring-0 transition-all text-lg font-medium dark:bg-background-dark dark:border-white/10"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-[#0d171c] dark:text-gray-300 mb-2">Main Characters</label>
                   <input 
@@ -91,7 +93,7 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                     value={config.characters}
                     onChange={(e) => setConfig({...config, characters: e.target.value})}
                     placeholder="e.g., Sparky the robot"
-                    className="w-full p-4 rounded-xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
                   />
                 </div>
                 <div>
@@ -101,18 +103,18 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                     value={config.setting}
                     onChange={(e) => setConfig({...config, setting: e.target.value})}
                     placeholder="e.g., Planet Zog or Underwater City"
-                    className="w-full p-4 rounded-xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-black uppercase tracking-widest text-[#0d171c] dark:text-gray-300 mb-2">Story Tone</label>
                   <select 
                     value={config.tone}
                     onChange={(e) => setConfig({...config, tone: e.target.value as any})}
-                    className="w-full p-4 rounded-xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10 appearance-none bg-no-repeat bg-[right_1.25rem_center]"
                   >
                     <option value="Adventurous">Adventurous 🚀</option>
                     <option value="Funny">Funny 😂</option>
@@ -126,7 +128,7 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                   <select 
                     value={config.length}
                     onChange={(e) => setConfig({...config, length: e.target.value as any})}
-                    className="w-full p-4 rounded-xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10"
+                    className="w-full p-5 rounded-2xl border-2 border-primary/20 focus:border-primary transition-all dark:bg-background-dark dark:border-white/10 appearance-none bg-no-repeat bg-[right_1.25rem_center]"
                   >
                     <option value="Paragraph">Cool Paragraph</option>
                     <option value="Short Story">Full Short Story</option>
@@ -162,6 +164,11 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                 )}
               </button>
             </div>
+            
+            <div className="mt-6 flex items-center gap-4 p-5 bg-[#fff9eb] dark:bg-white/5 rounded-2xl border border-primary/10">
+               <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=200" alt="Child studying" className="w-14 h-14 rounded-xl object-cover shadow-sm" />
+               <p className="text-xs font-bold text-[#49819c]">Your Magic Quill is ready! Pratyush Raj's AI engine is waiting for your creativity.</p>
+            </div>
           </div>
 
           {/* Result Panel */}
@@ -174,19 +181,28 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
               <span className="text-[10px] font-black opacity-30 uppercase tracking-tighter">PR 2026</span>
             </h3>
             
-            <div className="flex-1 space-y-6 overflow-y-auto max-h-[700px] pr-2">
+            <div className="flex-1 space-y-6 overflow-y-auto max-h-[750px] pr-2 custom-scrollbar">
               {history.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center text-[#49819c] bg-white dark:bg-white/5 rounded-2xl border-2 border-dashed border-primary/20">
-                  <span className="material-symbols-outlined text-6xl mb-4 opacity-20">edit_note</span>
-                  <p className="font-bold text-xl">Your stories will appear here!</p>
-                  <p className="max-w-[250px] mx-auto opacity-70">Fill out the form on the left to start your writing journey with Pratyush Raj's engine.</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center text-[#49819c] bg-white dark:bg-white/5 rounded-[3rem] border-2 border-dashed border-primary/20 overflow-hidden px-10">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
+                    <span className="material-symbols-outlined text-5xl">edit_note</span>
+                  </div>
+                  <p className="font-black text-2xl mb-2 text-[#0d171c] dark:text-white">Start your journey!</p>
+                  <p className="max-w-[300px] mx-auto opacity-70 mb-10 font-medium">Fill out the magic form on the left to see your stories appear here.</p>
+                  <div className="w-full max-w-[420px] rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white dark:border-white/10 group transition-transform hover:scale-[1.02]">
+                    <img 
+                      src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=1000" 
+                      alt="Dreamy child studying illustration style" 
+                      className="w-full h-64 object-cover opacity-95" 
+                    />
+                  </div>
                 </div>
               ) : (
                 history.map((item) => (
-                  <div key={item.timestamp} className="bg-white dark:bg-white/5 p-8 rounded-2xl shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500">
+                  <div key={item.timestamp} className="bg-white dark:bg-white/5 p-10 rounded-[2rem] shadow-lg border-l-8 border-primary animate-in slide-in-from-right duration-500 hover:shadow-xl transition-shadow">
                     <div className="flex justify-between items-start mb-6">
-                      <h4 className="text-2xl font-black text-primary">{item.title}</h4>
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                      <h4 className="text-2xl font-black text-primary leading-tight">{item.title}</h4>
+                      <span className="text-xs font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-white/5 px-3 py-1 rounded-full">
                         {new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </span>
                     </div>
@@ -195,16 +211,16 @@ const AIStoryLab: React.FC<AIStoryLabProps> = ({ onBack, onEarnXP }) => {
                         {item.text}
                       </p>
                     </div>
-                    <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/10 flex gap-4">
+                    <div className="mt-10 pt-6 border-t border-gray-100 dark:border-white/10 flex gap-6">
                       <button 
                         onClick={() => navigator.clipboard.writeText(item.text)}
-                        className="flex items-center gap-2 text-sm font-bold text-primary hover:text-accent-pink transition-colors"
+                        className="flex items-center gap-2 text-sm font-black text-primary hover:text-accent-pink transition-colors group"
                       >
-                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">content_copy</span>
                         Copy Text
                       </button>
-                      <button className="flex items-center gap-2 text-sm font-bold text-primary hover:text-accent-pink transition-colors">
-                        <span className="material-symbols-outlined text-lg">share</span>
+                      <button className="flex items-center gap-2 text-sm font-black text-primary hover:text-accent-pink transition-colors group">
+                        <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">share</span>
                         Share Story
                       </button>
                     </div>

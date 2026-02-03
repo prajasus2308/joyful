@@ -96,7 +96,9 @@ const LessonsCenter: React.FC<LessonsCenterProps> = ({ onBack, onEarnXP }) => {
 
         <div className="max-w-[800px] mx-auto">
           {!showResult ? (
-            <div className="bg-white dark:bg-white/5 p-10 rounded-3xl shadow-2xl border-4 border-primary/10">
+            <div className="bg-white dark:bg-white/5 p-10 rounded-3xl shadow-2xl border-4 border-primary/10 relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=200" alt="Brain Power" className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-10 rotate-12" />
+              
               <div className="flex justify-between items-center mb-8">
                 <span className="px-4 py-1 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-widest">
                   Question {currentIndex + 1} of {QUIZ_QUESTIONS.length}
@@ -137,7 +139,9 @@ const LessonsCenter: React.FC<LessonsCenterProps> = ({ onBack, onEarnXP }) => {
               )}
             </div>
           ) : (
-            <div className="bg-white dark:bg-white/5 p-16 rounded-3xl shadow-2xl text-center border-4 border-accent-yellow/20">
+            <div className="bg-white dark:bg-white/5 p-16 rounded-3xl shadow-2xl text-center border-4 border-accent-yellow/20 relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&q=80&w=400" alt="Victory" className="absolute inset-0 w-full h-full object-cover opacity-5 pointer-events-none" />
+              
               <div className="h-24 w-24 bg-accent-yellow rounded-full flex items-center justify-center text-white mx-auto mb-8 shadow-xl">
                 <span className="material-symbols-outlined text-6xl">workspace_premium</span>
               </div>
