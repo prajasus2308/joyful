@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { getRandomFact, getQuickExplanation } from '../services/geminiService';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -9,12 +10,32 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, onLessonsClick, onRewardsClick }) => {
-  const [showVideo, setShowVideo] = useState(false);
+  const [fact, setFact] = useState<string | null>(null);
+  const [isFactLoading, setIsFactLoading] = useState(false);
+  const [doubt, setDoubt] = useState('');
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [isAnswerLoading, setIsAnswerLoading] = useState(false);
+
+  const handleGetFact = async () => {
+    setIsFactLoading(true);
+    const result = await getRandomFact();
+    setFact(result);
+    setIsFactLoading(false);
+  };
+
+  const handleAskDoubt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!doubt.trim() || isAnswerLoading) return;
+    setIsAnswerLoading(true);
+    const result = await getQuickExplanation(doubt);
+    setAnswer(result);
+    setIsAnswerLoading(false);
+  };
 
   return (
     <>
       {/* Hero Section */}
-      <section className="relative px-6 py-20 md:py-32 overflow-hidden bg-[#fff9eb]">
+      <section className="relative px-6 py-20 md:py-32 overflow-hidden bg-[#fff9eb] dark:bg-background-dark/20">
         <div className="absolute inset-0 hero-glow -z-10"></div>
         
         <div className="mx-auto max-w-[960px] text-center">
@@ -36,20 +57,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
               Get Started
               <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
             </button>
+            <div className="hidden sm:block w-px h-12 bg-primary/10"></div>
             <button 
-              onClick={() => setShowVideo(true)}
-              className="min-w-[200px] bouncy-hover h-16 px-8 rounded-full border-2 border-primary/20 bg-white dark:bg-white/5 text-primary text-lg font-black hover:bg-primary/5 flex items-center justify-center gap-2"
+              onClick={handleGetFact}
+              disabled={isFactLoading}
+              className="min-w-[200px] bouncy-hover h-16 px-8 rounded-full border-2 border-primary/20 bg-white dark:bg-white/5 text-primary text-lg font-black hover:bg-primary/5 flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span className="material-symbols-outlined">play_circle</span>
-              Watch Video
+              <span className="material-symbols-outlined">{isFactLoading ? 'autorenew' : 'auto_stories'}</span>
+              {isFactLoading ? 'Thinking...' : 'Fun Fact!'}
             </button>
           </div>
-          <p className="mt-8 text-xs font-bold text-[#49819c] uppercase tracking-widest">
-            Handcrafted with excellence by Pratyush Raj
-          </p>
+
+          {fact && (
+            <div className="mt-8 max-w-[500px] mx-auto p-6 bg-white dark:bg-white/5 rounded-[2rem] border-2 border-primary/10 shadow-lg text-primary font-bold italic animate-in zoom-in slide-in-from-top-4">
+              ✨ {fact}
+            </div>
+          )}
         </div>
 
-        {/* Hero Illustration - Using the requested soft aesthetic */}
+        {/* Hero Illustration */}
         <div className="mt-20 mx-auto max-w-[1000px] rounded-[3rem] overflow-hidden shadow-2xl border-[12px] border-white dark:border-white/10 aspect-video relative group transition-all duration-700 hover:shadow-primary/20">
           <img 
             src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=2000" 
@@ -62,6 +88,57 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
                 <span className="text-white text-xl font-black bg-black/20 backdrop-blur-md px-4 py-1 rounded-lg">Inspired by Pratyush Raj • 2026</span>
              </div>
           </div>
+        </div>
+      </section>
+
+      {/* Professor Owl's Doubt Box Section */}
+      <section className="px-6 py-20 bg-[#fffdf7] dark:bg-background-dark/40 border-y border-primary/5">
+        <div className="mx-auto max-w-[800px] text-center">
+          <div className="flex flex-col items-center gap-4 mb-10">
+            <div className="h-20 w-20 bg-accent-yellow rounded-full flex items-center justify-center text-white shadow-lg animate-pulse">
+              <span className="material-symbols-outlined text-5xl">psychology_alt</span>
+            </div>
+            <h2 className="text-4xl font-black text-[#0d171c] dark:text-white">Ask Anything!</h2>
+            <p className="text-[#49819c] font-medium text-lg">Curious about the world? Professor Owl has all the answers!</p>
+          </div>
+
+          <form onSubmit={handleAskDoubt} className="relative group">
+            <input 
+              type="text" 
+              value={doubt}
+              onChange={(e) => setDoubt(e.target.value)}
+              placeholder="Why is the sky blue?"
+              className="w-full h-20 px-10 rounded-full border-4 border-primary/10 focus:border-primary focus:ring-0 outline-none text-xl font-bold dark:bg-background-dark shadow-xl transition-all pr-40"
+            />
+            <button 
+              type="submit"
+              disabled={isAnswerLoading || !doubt.trim()}
+              className="absolute right-4 top-4 h-12 px-8 bg-primary text-white font-black rounded-full bouncy-hover shadow-lg flex items-center gap-2 disabled:opacity-50"
+            >
+              {isAnswerLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined">send</span>
+                  Ask
+                </>
+              )}
+            </button>
+          </form>
+
+          {answer && (
+            <div className="mt-10 p-8 bg-white dark:bg-white/5 rounded-[2.5rem] border-4 border-accent-yellow/10 shadow-2xl text-left animate-in slide-in-from-bottom-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-accent-yellow/20 rounded-full flex items-center justify-center text-accent-yellow">
+                  <span className="material-symbols-outlined">school</span>
+                </div>
+                <span className="font-black text-accent-yellow uppercase tracking-widest text-sm">Professor Owl Says:</span>
+              </div>
+              <p className="text-xl font-bold text-[#0d171c] dark:text-white leading-relaxed">
+                "{answer}"
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -99,7 +176,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
       </section>
 
       {/* CTA Section */}
-      <section className="px-6 py-24 bg-[#fff9eb]">
+      <section className="px-6 py-24 bg-[#fff9eb] dark:bg-background-dark/20">
         <div className="mx-auto max-w-[1000px] rounded-[3rem] bg-gradient-to-br from-primary to-[#1d91cc] p-10 md:p-20 text-center text-white relative overflow-hidden shadow-2xl shadow-primary/20">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
           <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/10 rounded-full"></div>

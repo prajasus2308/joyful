@@ -8,6 +8,7 @@ import GamesCenter from './components/GamesCenter';
 import LessonsCenter from './components/LessonsCenter';
 import RewardsCenter from './components/RewardsCenter';
 import LegalCenter from './components/LegalCenter';
+import ChatBot from './components/ChatBot';
 
 enum View {
   LANDING = 'landing',
@@ -78,6 +79,8 @@ const App: React.FC = () => {
           <LegalCenter type={currentView as unknown as any} onBack={() => navigateTo(View.LANDING)} />
         )}
       </main>
+
+      <ChatBot />
 
       <Footer 
         onPrivacyClick={() => navigateTo(View.PRIVACY)}
