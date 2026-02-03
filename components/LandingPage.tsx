@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onGamesClick: () => void;
+  onLessonsClick: () => void;
+  onRewardsClick: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, onLessonsClick, onRewardsClick }) => {
   const [showVideo, setShowVideo] = useState(false);
 
   return (
@@ -92,18 +95,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               title="Level Up" 
               description="Master new skills through interactive challenges and level up your custom avatar."
               color="primary"
+              onClick={onGamesClick}
             />
             <FeatureCard 
               icon="workspace_premium" 
               title="Earn Badges" 
               description="Collect rare, shiny badges for every goal you reach and show them off in your gallery."
               color="accent-pink"
+              onClick={onRewardsClick}
             />
             <FeatureCard 
               icon="group" 
               title="New Friends" 
               description="Meet new friends and learn together in a completely safe, moderated environment."
               color="accent-yellow"
+              onClick={onLessonsClick}
             />
           </div>
         </div>
@@ -137,12 +143,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   );
 };
 
-const FeatureCard: React.FC<{ icon: string; title: string; description: string; color: string }> = ({ icon, title, description, color }) => {
+const FeatureCard: React.FC<{ icon: string; title: string; description: string; color: string; onClick: () => void }> = ({ icon, title, description, color, onClick }) => {
   const colorClass = color === 'primary' ? 'bg-primary' : color === 'accent-pink' ? 'bg-accent-pink' : 'bg-accent-yellow';
-  const borderClass = color === 'primary' ? 'hover:border-primary' : color === 'accent-pink' ? 'hover:border-accent-pink' : 'hover:border-accent-yellow';
+  const borderClass = color === 'primary' ? 'border-primary/40' : color === 'accent-pink' ? 'border-accent-pink/40' : 'border-accent-yellow/40';
+  const hoverBorderClass = color === 'primary' ? 'hover:border-primary' : color === 'accent-pink' ? 'hover:border-accent-pink' : 'hover:border-accent-yellow';
   
   return (
-    <div className={`group bouncy-hover flex flex-col gap-6 rounded-xl border-2 border-[#cee0e8] dark:border-white/5 bg-background-light dark:bg-white/5 p-8 transition-all ${borderClass} hover:shadow-2xl`}>
+    <button 
+      onClick={onClick}
+      className={`group bouncy-hover text-left flex flex-col gap-6 rounded-xl border-2 ${borderClass} bg-background-light dark:bg-white/5 p-8 transition-all ${hoverBorderClass} hover:shadow-2xl cursor-pointer w-full`}
+    >
       <div className={`flex h-16 w-16 items-center justify-center rounded-full ${colorClass} text-white shadow-lg`}>
         <span className="material-symbols-outlined text-3xl">{icon}</span>
       </div>
@@ -152,7 +162,7 @@ const FeatureCard: React.FC<{ icon: string; title: string; description: string; 
           {description}
         </p>
       </div>
-    </div>
+    </button>
   );
 };
 

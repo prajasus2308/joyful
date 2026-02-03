@@ -7,13 +7,18 @@ import AIStoryLab from './components/AIStoryLab';
 import GamesCenter from './components/GamesCenter';
 import LessonsCenter from './components/LessonsCenter';
 import RewardsCenter from './components/RewardsCenter';
+import LegalCenter from './components/LegalCenter';
 
 enum View {
   LANDING = 'landing',
   STORY_LAB = 'story_lab',
   GAMES = 'games',
   LESSONS = 'lessons',
-  REWARDS = 'rewards'
+  REWARDS = 'rewards',
+  PRIVACY = 'privacy',
+  TERMS = 'terms',
+  PARENTS = 'parents',
+  CONTACT = 'contact'
 }
 
 const App: React.FC = () => {
@@ -50,7 +55,12 @@ const App: React.FC = () => {
       
       <main className="flex-1">
         {currentView === View.LANDING && (
-          <LandingPage onGetStarted={() => navigateTo(View.STORY_LAB)} />
+          <LandingPage 
+            onGetStarted={() => navigateTo(View.STORY_LAB)} 
+            onGamesClick={() => navigateTo(View.GAMES)}
+            onLessonsClick={() => navigateTo(View.LESSONS)}
+            onRewardsClick={() => navigateTo(View.REWARDS)}
+          />
         )}
         {currentView === View.STORY_LAB && (
           <AIStoryLab onBack={() => navigateTo(View.LANDING)} onEarnXP={earnXP} />
@@ -64,9 +74,17 @@ const App: React.FC = () => {
         {currentView === View.REWARDS && (
           <RewardsCenter xp={xp} onBack={() => navigateTo(View.LANDING)} />
         )}
+        {(currentView === View.PRIVACY || currentView === View.TERMS || currentView === View.PARENTS || currentView === View.CONTACT) && (
+          <LegalCenter type={currentView as unknown as any} onBack={() => navigateTo(View.LANDING)} />
+        )}
       </main>
 
-      <Footer />
+      <Footer 
+        onPrivacyClick={() => navigateTo(View.PRIVACY)}
+        onTermsClick={() => navigateTo(View.TERMS)}
+        onParentsClick={() => navigateTo(View.PARENTS)}
+        onContactClick={() => navigateTo(View.CONTACT)}
+      />
     </div>
   );
 };

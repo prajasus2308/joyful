@@ -1,7 +1,14 @@
 
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onPrivacyClick: () => void;
+  onTermsClick: () => void;
+  onParentsClick: () => void;
+  onContactClick: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onPrivacyClick, onTermsClick, onParentsClick, onContactClick }) => {
   return (
     <footer className="bg-white dark:bg-background-dark border-t border-[#e7eff4] dark:border-white/10 px-6 py-16">
       <div className="mx-auto max-w-[1200px] flex flex-col items-center gap-10">
@@ -18,10 +25,10 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-          <a className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Privacy Policy</a>
-          <a className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Terms of Service</a>
-          <a className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Parents Guide</a>
-          <a className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors" href="#">Contact Us</a>
+          <button onClick={onPrivacyClick} className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Privacy Policy</button>
+          <button onClick={onTermsClick} className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Terms of Service</button>
+          <button onClick={onParentsClick} className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Parents Guide</button>
+          <button onClick={onContactClick} className="text-[#49819c] dark:text-gray-400 text-sm font-bold uppercase tracking-widest hover:text-primary transition-colors">Contact Us</button>
         </div>
 
         <div className="flex gap-6">
