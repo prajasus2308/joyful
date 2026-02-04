@@ -10,6 +10,7 @@ import LessonsCenter from './components/LessonsCenter';
 import RewardsCenter from './components/RewardsCenter';
 import LegalCenter from './components/LegalCenter';
 import ChatBot from './components/ChatBot';
+import PortfolioView from './components/PortfolioView';
 
 enum View {
   LANDING = 'landing',
@@ -18,6 +19,7 @@ enum View {
   GAMES = 'games',
   LESSONS = 'lessons',
   REWARDS = 'rewards',
+  PORTFOLIO = 'portfolio',
   PRIVACY = 'privacy',
   TERMS = 'terms',
   PARENTS = 'parents',
@@ -83,7 +85,7 @@ const App: React.FC = () => {
         onGamesClick={() => navigateTo(View.GAMES)}
         onLessonsClick={() => navigateTo(View.LESSONS)}
         onRewardsClick={() => navigateTo(View.REWARDS)}
-        onProfileClick={() => setShowProfileModal(true)}
+        onProfileClick={() => navigateTo(View.PORTFOLIO)}
         currentView={currentView}
       />
       
@@ -112,6 +114,16 @@ const App: React.FC = () => {
         {currentView === View.REWARDS && (
           <RewardsCenter xp={xp} onBack={() => navigateTo(View.LANDING)} />
         )}
+        {currentView === View.PORTFOLIO && (
+          <PortfolioView 
+            xp={xp} 
+            userName={userName} 
+            userBio={userBio} 
+            gender={gender} 
+            onEdit={() => setShowProfileModal(true)} 
+            onBack={() => navigateTo(View.LANDING)} 
+          />
+        )}
         {(currentView === View.PRIVACY || currentView === View.TERMS || currentView === View.PARENTS || currentView === View.CONTACT) && (
           <LegalCenter type={currentView as unknown as any} onBack={() => navigateTo(View.LANDING)} />
         )}
@@ -119,105 +131,74 @@ const App: React.FC = () => {
 
       <ChatBot />
 
-      {/* Profile/Onboarding Modal */}
+      {/* Portfolio Creator Modal */}
       {(showProfileModal || !isProfileComplete) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-background-dark/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-[#1a2b34] w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl border-4 border-primary/20 animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-black text-primary mb-2">My Creative Portfolio</h2>
-              <p className="text-[#49819c] font-medium">Tell us about yourself, explorer! ✨</p>
+            <div className="text-center mb-10">
+              <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4">Onboarding Studio</div>
+              <h2 className="text-4xl font-black text-primary mb-2">Build Your Portfolio</h2>
+              <p className="text-[#49819c] font-medium italic">"Every great creator starts with a name!" ✨</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Left Column: Details */}
-              <div className="space-y-6 text-left">
+              {/* Profile Details */}
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-primary mb-2">What is your name?</label>
+                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-primary mb-3">Professional Name</label>
                   <input 
                     type="text"
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
-                    placeholder="e.g. Alex"
-                    className="w-full px-6 py-4 rounded-2xl border-2 border-primary/10 focus:border-primary outline-none text-lg font-bold dark:bg-background-dark"
+                    placeholder="Enter your name..."
+                    className="w-full px-6 py-4 rounded-2xl border-2 border-primary/10 focus:border-primary outline-none text-lg font-bold dark:bg-background-dark shadow-inner"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-primary mb-2">Choose your avatar</label>
+                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-primary mb-3">Choose Your Avatar</label>
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => setGender('boy')}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-4 transition-all ${gender === 'boy' ? 'border-primary bg-primary/10 shadow-lg scale-105' : 'border-transparent bg-gray-50 dark:bg-white/5 opacity-60'}`}
+                      className={`group flex flex-col items-center gap-3 p-4 rounded-3xl border-4 transition-all ${gender === 'boy' ? 'border-primary bg-primary/10 shadow-lg scale-105' : 'border-transparent bg-gray-50 dark:bg-white/5 opacity-60'}`}
                     >
                       <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
                         <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=250&auto=format&fit=crop" alt="Boy" className="w-full h-full object-cover" />
                       </div>
-                      <span className="text-sm font-black">Boy</span>
+                      <span className="text-xs font-black uppercase">Creator Boy</span>
                     </button>
                     <button 
                       onClick={() => setGender('girl')}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-4 transition-all ${gender === 'girl' ? 'border-accent-pink bg-accent-pink/10 shadow-lg scale-105' : 'border-transparent bg-gray-50 dark:bg-white/5 opacity-60'}`}
+                      className={`group flex flex-col items-center gap-3 p-4 rounded-3xl border-4 transition-all ${gender === 'girl' ? 'border-accent-pink bg-accent-pink/10 shadow-lg scale-105' : 'border-transparent bg-gray-50 dark:bg-white/5 opacity-60'}`}
                     >
                       <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
                         <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=250&auto=format&fit=crop" alt="Girl" className="w-full h-full object-cover" />
                       </div>
-                      <span className="text-sm font-black">Girl</span>
+                      <span className="text-xs font-black uppercase">Creator Girl</span>
                     </button>
                   </div>
                 </div>
+              </div>
 
+              {/* Bio & Actions */}
+              <div className="flex flex-col gap-6">
                 <div>
-                  <label className="block text-sm font-black uppercase tracking-widest text-primary mb-2">About me (Bio)</label>
+                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-primary mb-3">Personal Description</label>
                   <textarea 
                     value={userBio}
                     onChange={(e) => setUserBio(e.target.value)}
-                    placeholder="I love space and magic robots!"
-                    className="w-full px-6 py-4 rounded-2xl border-2 border-primary/10 focus:border-primary outline-none text-md font-medium dark:bg-background-dark h-32 resize-none"
+                    placeholder="Tell the world about your creative dreams..."
+                    className="w-full px-6 py-4 rounded-2xl border-2 border-primary/10 focus:border-primary outline-none text-md font-medium dark:bg-background-dark h-40 resize-none shadow-inner"
                   />
-                </div>
-              </div>
-
-              {/* Right Column: Badges & Preview */}
-              <div className="flex flex-col gap-6">
-                <div className="bg-background-light dark:bg-white/5 p-8 rounded-[2rem] border-2 border-primary/5 text-center relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-                  <h3 className="text-xs font-black text-[#49819c] uppercase tracking-[0.2em] mb-6">Achievement Showcase</h3>
-                  
-                  {/* Badge Grid - GitHub Style */}
-                  <div className="grid grid-cols-4 gap-3 mb-8">
-                    {[...Array(12)].map((_, i) => {
-                      const isUnlocked = xp >= (i + 1) * 500;
-                      return (
-                        <div 
-                          key={i} 
-                          className={`aspect-square rounded-xl flex items-center justify-center transition-all ${isUnlocked ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-gray-100 dark:bg-white/5 text-gray-300'}`}
-                          title={isUnlocked ? `Achievement ${i+1}` : `Locked (Needs ${(i+1)*500} XP)`}
-                        >
-                          <span className="material-symbols-outlined text-sm">{isUnlocked ? 'stars' : 'lock'}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                      <span className="text-[10px] font-black uppercase text-[#49819c]">Power Level</span>
-                      <span className="text-lg font-black text-primary">{Math.floor(xp / 1000) + 1}</span>
-                    </div>
-                    <div className="w-full h-3 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(xp % 1000) / 10}%` }}></div>
-                    </div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">{xp} Total Experience Points</p>
-                  </div>
                 </div>
 
                 <button 
                   onClick={handleSaveProfile}
                   disabled={!userName.trim() || !gender}
-                  className="w-full h-16 rounded-full bg-primary text-white font-black text-xl shadow-xl shadow-primary/20 bouncy-hover disabled:opacity-50 disabled:grayscale transition-all flex items-center justify-center gap-3"
+                  className="w-full h-16 rounded-full bg-primary text-white font-black text-xl shadow-xl shadow-primary/30 bouncy-hover disabled:opacity-50 transition-all flex items-center justify-center gap-3"
                 >
-                  <span className="material-symbols-outlined">save</span>
-                  Save My Portfolio
+                  <span className="material-symbols-outlined">verified_user</span>
+                  Complete Portfolio
                 </button>
               </div>
             </div>

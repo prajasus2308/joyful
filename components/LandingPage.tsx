@@ -14,7 +14,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
   const [fact, setFact] = useState<string | null>(null);
   const [isFactLoading, setIsFactLoading] = useState(false);
   const [doubt, setDoubt] = useState('');
-  const [explanation, setExplanation] = useState<{ brief: string, detailed: string } | null>(null);
+  const [explanation, setExplanation] = useState<{ brief: string, detailed: string, sources: any[] } | null>(null);
   const [isAnswerLoading, setIsAnswerLoading] = useState(false);
   const [showDetailed, setShowDetailed] = useState(false);
 
@@ -31,16 +31,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
     setIsAnswerLoading(true);
     const result = await getQuickExplanation(doubt);
     setExplanation(result);
-    setShowDetailed(false); // Default to brief
+    setShowDetailed(false);
     setIsAnswerLoading(false);
   };
 
   return (
     <>
-      {/* Hero Section */}
       <section className="relative px-6 py-20 md:py-32 overflow-hidden bg-[#fff9eb] dark:bg-background-dark/20">
         <div className="absolute inset-0 hero-glow -z-10"></div>
-        
         <div className="mx-auto max-w-[960px] text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-4 animate-bounce">
             <span className="material-symbols-outlined text-sm">auto_awesome</span>
@@ -53,56 +51,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
             The fun way to grow, discover, and make new friends in a safe, colorful world designed just for you.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={onGetStarted}
-              className="group flex min-w-[200px] bouncy-hover items-center justify-center gap-2 rounded-full h-16 px-8 bg-primary text-white text-lg font-black shadow-xl shadow-primary/40"
-            >
+            <button onClick={onGetStarted} className="group flex min-w-[200px] bouncy-hover items-center justify-center gap-2 rounded-full h-16 px-8 bg-primary text-white text-lg font-black shadow-xl shadow-primary/40">
               Get Started
               <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
             </button>
-            <div className="hidden sm:block w-px h-12 bg-primary/10"></div>
-            <button 
-              onClick={handleGetFact}
-              disabled={isFactLoading}
-              className="min-w-[200px] bouncy-hover h-16 px-8 rounded-full border-2 border-primary/20 bg-white dark:bg-white/5 text-primary text-lg font-black hover:bg-primary/5 flex items-center justify-center gap-2 disabled:opacity-50"
-            >
+            <button onClick={handleGetFact} disabled={isFactLoading} className="min-w-[200px] bouncy-hover h-16 px-8 rounded-full border-2 border-primary/20 bg-white dark:bg-white/5 text-primary text-lg font-black hover:bg-primary/5 flex items-center justify-center gap-2 disabled:opacity-50">
               <span className="material-symbols-outlined">{isFactLoading ? 'autorenew' : 'auto_stories'}</span>
               {isFactLoading ? 'Thinking...' : 'Fun Fact!'}
             </button>
           </div>
-
-          {fact && (
-            <div className="mt-8 max-w-[500px] mx-auto p-6 bg-white dark:bg-white/5 rounded-[2rem] border-2 border-primary/10 shadow-lg text-primary font-bold italic animate-in zoom-in slide-in-from-top-4">
-              ✨ {fact}
-            </div>
-          )}
-        </div>
-
-        {/* Hero Illustration */}
-        <div className="mt-20 mx-auto max-w-[1000px] rounded-[3rem] overflow-hidden shadow-2xl border-[12px] border-white dark:border-white/10 aspect-video relative group transition-all duration-700 hover:shadow-primary/20">
-          <img 
-            src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&q=80&w=2000" 
-            alt="Child focused on creative writing" 
-            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent flex items-end p-10">
-             <div className="flex flex-col gap-1">
-                <span className="text-white text-xs font-black uppercase tracking-[0.2em] opacity-90">Joyful Studio</span>
-                <span className="text-white text-xl font-black bg-black/20 backdrop-blur-md px-4 py-1 rounded-lg">Inspired by Pratyush Raj • 2026</span>
-             </div>
-          </div>
+          {fact && <div className="mt-8 max-w-[500px] mx-auto p-6 bg-white dark:bg-white/5 rounded-[2rem] border-2 border-primary/10 shadow-lg text-primary font-bold italic animate-in zoom-in">✨ {fact}</div>}
         </div>
       </section>
 
-      {/* Professor Owl's Doubt Box Section */}
       <section className="px-6 py-20 bg-[#fffdf7] dark:bg-background-dark/40 border-y border-primary/5">
         <div className="mx-auto max-w-[800px] text-center">
           <div className="flex flex-col items-center gap-4 mb-10">
             <div className="h-20 w-20 bg-accent-yellow rounded-full flex items-center justify-center text-white shadow-lg animate-pulse">
               <span className="material-symbols-outlined text-5xl">psychology_alt</span>
             </div>
-            <h2 className="text-4xl font-black text-[#0d171c] dark:text-white">Ask Anything!</h2>
-            <p className="text-[#49819c] font-medium text-lg">Curious about the world? Professor Owl has all the answers!</p>
+            <h2 className="text-4xl font-black text-[#0d171c] dark:text-white">Ask Professor Owl!</h2>
+            <p className="text-[#49819c] font-medium text-lg">Now with Real-World Knowledge! 🌍</p>
           </div>
 
           <form onSubmit={handleAskDoubt} className="relative group">
@@ -110,69 +79,47 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
               type="text" 
               value={doubt}
               onChange={(e) => setDoubt(e.target.value)}
-              placeholder="Why is the sky blue?"
-              className="w-full h-20 px-10 rounded-full border-4 border-primary/10 focus:border-primary focus:ring-0 outline-none text-xl font-bold dark:bg-background-dark shadow-xl transition-all pr-40"
+              placeholder="Who won the Super Bowl?"
+              className="w-full h-20 px-10 rounded-full border-4 border-primary/10 focus:border-primary outline-none text-xl font-bold dark:bg-background-dark shadow-xl transition-all pr-40"
             />
-            <button 
-              type="submit"
-              disabled={isAnswerLoading || !doubt.trim()}
-              className="absolute right-4 top-4 h-12 px-8 bg-primary text-white font-black rounded-full bouncy-hover shadow-lg flex items-center gap-2 disabled:opacity-50"
-            >
-              {isAnswerLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined">send</span>
-                  Ask
-                </>
-              )}
+            <button type="submit" disabled={isAnswerLoading || !doubt.trim()} className="absolute right-4 top-4 h-12 px-8 bg-primary text-white font-black rounded-full bouncy-hover shadow-lg flex items-center gap-2 disabled:opacity-50">
+              {isAnswerLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <><span className="material-symbols-outlined">send</span> Ask</>}
             </button>
           </form>
 
           {explanation && (
             <div className="mt-10 p-8 bg-white dark:bg-white/5 rounded-[2.5rem] border-4 border-accent-yellow/10 shadow-2xl text-left animate-in slide-in-from-bottom-10">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-accent-yellow/20 rounded-full flex items-center justify-center text-accent-yellow">
-                    <span className="material-symbols-outlined">school</span>
-                  </div>
-                  <span className="font-black text-accent-yellow uppercase tracking-widest text-sm">Professor Owl Says:</span>
-                </div>
-                
-                {/* Answer Toggle */}
                 <div className="flex bg-background-light dark:bg-white/10 rounded-full p-1">
-                  <button 
-                    onClick={() => setShowDetailed(false)}
-                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${!showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}
-                  >
-                    Short
-                  </button>
-                  <button 
-                    onClick={() => setShowDetailed(true)}
-                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}
-                  >
-                    Detailed
-                  </button>
+                  <button onClick={() => setShowDetailed(false)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${!showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}>Short</button>
+                  <button onClick={() => setShowDetailed(true)} className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}>Detailed</button>
                 </div>
               </div>
 
-              <div className="relative min-h-[80px]">
-                {!showDetailed ? (
-                  <p className="text-xl font-bold text-[#0d171c] dark:text-white leading-relaxed animate-in fade-in slide-in-from-left-4">
-                    "{explanation.brief}"
-                  </p>
-                ) : (
-                  <p className="text-lg font-medium text-[#49819c] dark:text-gray-300 leading-relaxed italic animate-in fade-in slide-in-from-right-4">
-                    {explanation.detailed}
-                  </p>
-                )}
+              <div className="relative min-h-[80px] mb-6">
+                <p className="text-xl font-bold text-[#0d171c] dark:text-white leading-relaxed">
+                  "{showDetailed ? explanation.detailed : explanation.brief}"
+                </p>
               </div>
+
+              {explanation.sources.length > 0 && (
+                <div className="pt-6 border-t border-gray-100 dark:border-white/10">
+                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3">Owl's Sources:</p>
+                   <div className="flex flex-wrap gap-3">
+                     {explanation.sources.map((s: any, i: number) => (
+                       <a key={i} href={s.web?.uri} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-1 bg-primary/5 hover:bg-primary/20 rounded-lg text-primary text-[10px] font-bold transition-all">
+                         <span className="material-symbols-outlined text-xs">link</span>
+                         {s.web?.title || 'Source'}
+                       </a>
+                     ))}
+                   </div>
+                </div>
+              )}
             </div>
           )}
         </div>
       </section>
 
-      {/* Feature Section */}
       <section id="features" className="px-6 py-24 bg-white dark:bg-background-dark/30">
         <div className="mx-auto max-w-[1200px]">
           <div className="flex flex-col items-center text-center gap-4 mb-20">
@@ -180,59 +127,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
             <p className="text-[#49819c] dark:text-gray-400 text-lg max-w-[600px]">We've combined education with pure excitement to create the ultimate learning experience in 2026.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard 
-              icon="auto_fix_high" 
-              title="Magic Studio" 
-              description="Turn your words into colorful art with our magic AI paintbrush!"
-              color="primary"
-              onClick={onMagicStudioClick}
-            />
-            <FeatureCard 
-              icon="videogame_asset" 
-              title="Arcade Zone" 
-              description="Master new skills through interactive challenges and level up your avatar."
-              color="accent-pink"
-              onClick={onGamesClick}
-            />
-            <FeatureCard 
-              icon="workspace_premium" 
-              title="Rewards" 
-              description="Collect rare, shiny badges for every goal you reach in your gallery."
-              color="accent-yellow"
-              onClick={onRewardsClick}
-            />
-            <FeatureCard 
-              icon="group" 
-              title="Lessons" 
-              description="Learn logic and grammar with Professor Owl in a safe environment."
-              color="primary"
-              onClick={onLessonsClick}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="px-6 py-24 bg-[#fff9eb] dark:bg-background-dark/20">
-        <div className="mx-auto max-w-[1000px] rounded-[3rem] bg-gradient-to-br from-primary to-[#1d91cc] p-10 md:p-20 text-center text-white relative overflow-hidden shadow-2xl shadow-primary/20">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-white/10 rounded-full"></div>
-          <div className="relative z-10 flex flex-col items-center gap-8">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight max-w-[700px]">
-              Ready for your next big adventure?
-            </h2>
-            <p className="text-lg md:text-xl font-medium text-white/90 max-w-[600px]">
-              Join thousands of kids who are already having a blast while learning something new every day!
-            </p>
-            <button 
-              onClick={onGetStarted}
-              className="flex min-w-[240px] bouncy-hover items-center justify-center rounded-full h-16 px-10 bg-white text-primary text-xl font-black shadow-lg"
-            >
-              Get Started Now
-            </button>
-            <span className="text-sm font-bold opacity-80 uppercase tracking-widest">
-              A Pratyush Raj Production
-            </span>
+            <FeatureCard icon="auto_fix_high" title="Magic Studio" description="Turn your words into colorful art with our magic AI paintbrush!" color="primary" onClick={onMagicStudioClick} />
+            <FeatureCard icon="videogame_asset" title="Arcade Zone" description="Master new skills through interactive challenges and level up your avatar." color="accent-pink" onClick={onGamesClick} />
+            <FeatureCard icon="workspace_premium" title="Rewards" description="Collect rare, shiny badges for every goal you reach in your gallery." color="accent-yellow" onClick={onRewardsClick} />
+            <FeatureCard icon="group" title="Lessons" description="Learn logic and grammar with Professor Owl in a safe environment." color="primary" onClick={onLessonsClick} />
           </div>
         </div>
       </section>
@@ -240,27 +138,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioCl
   );
 };
 
-const FeatureCard: React.FC<{ icon: string; title: string; description: string; color: string; onClick: () => void }> = ({ icon, title, description, color, onClick }) => {
-  const colorClass = color === 'primary' ? 'bg-primary' : color === 'accent-pink' ? 'bg-accent-pink' : 'bg-accent-yellow';
-  const borderClass = color === 'primary' ? 'border-primary/20' : color === 'accent-pink' ? 'border-accent-pink/20' : 'border-accent-yellow/20';
-  const hoverBorderClass = color === 'primary' ? 'hover:border-primary' : color === 'accent-pink' ? 'hover:border-accent-pink' : 'hover:border-accent-yellow';
-  
-  return (
-    <button 
-      onClick={onClick}
-      className={`group bouncy-hover text-left flex flex-col gap-6 rounded-[2.5rem] border-2 ${borderClass} bg-white dark:bg-white/5 p-8 transition-all ${hoverBorderClass} hover:shadow-[0_20px_60px_rgba(37,175,244,0.1)] cursor-pointer w-full`}
-    >
-      <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${colorClass} text-white shadow-lg`}>
-        <span className="material-symbols-outlined text-3xl">{icon}</span>
-      </div>
-      <div className="flex flex-col gap-3">
-        <h3 className="text-xl font-black text-[#0d171c] dark:text-white">{title}</h3>
-        <p className="text-sm text-[#49819c] dark:text-gray-400 font-medium leading-relaxed">
-          {description}
-        </p>
-      </div>
-    </button>
-  );
-};
+const FeatureCard: React.FC<{ icon: string; title: string; description: string; color: string; onClick: () => void }> = ({ icon, title, description, color, onClick }) => (
+  <button onClick={onClick} className={`group bouncy-hover text-left flex flex-col gap-6 rounded-[2.5rem] border-2 bg-white dark:bg-white/5 p-8 transition-all hover:shadow-[0_20px_60px_rgba(37,175,244,0.1)] cursor-pointer w-full border-primary/20 hover:border-primary`}>
+    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-lg`}>
+      <span className="material-symbols-outlined text-3xl">{icon}</span>
+    </div>
+    <div className="flex flex-col gap-3">
+      <h3 className="text-xl font-black text-[#0d171c] dark:text-white">{title}</h3>
+      <p className="text-sm text-[#49819c] dark:text-gray-400 font-medium leading-relaxed">{description}</p>
+    </div>
+  </button>
+);
 
 export default LandingPage;
