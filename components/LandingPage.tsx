@@ -4,17 +4,19 @@ import { getRandomFact, getQuickExplanation } from '../services/geminiService';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onMagicStudioClick: () => void;
   onGamesClick: () => void;
   onLessonsClick: () => void;
   onRewardsClick: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, onLessonsClick, onRewardsClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onMagicStudioClick, onGamesClick, onLessonsClick, onRewardsClick }) => {
   const [fact, setFact] = useState<string | null>(null);
   const [isFactLoading, setIsFactLoading] = useState(false);
   const [doubt, setDoubt] = useState('');
-  const [answer, setAnswer] = useState<string | null>(null);
+  const [explanation, setExplanation] = useState<{ brief: string, detailed: string } | null>(null);
   const [isAnswerLoading, setIsAnswerLoading] = useState(false);
+  const [showDetailed, setShowDetailed] = useState(false);
 
   const handleGetFact = async () => {
     setIsFactLoading(true);
@@ -28,7 +30,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
     if (!doubt.trim() || isAnswerLoading) return;
     setIsAnswerLoading(true);
     const result = await getQuickExplanation(doubt);
-    setAnswer(result);
+    setExplanation(result);
+    setShowDetailed(false); // Default to brief
     setIsAnswerLoading(false);
   };
 
@@ -126,17 +129,44 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
             </button>
           </form>
 
-          {answer && (
+          {explanation && (
             <div className="mt-10 p-8 bg-white dark:bg-white/5 rounded-[2.5rem] border-4 border-accent-yellow/10 shadow-2xl text-left animate-in slide-in-from-bottom-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-accent-yellow/20 rounded-full flex items-center justify-center text-accent-yellow">
-                  <span className="material-symbols-outlined">school</span>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-accent-yellow/20 rounded-full flex items-center justify-center text-accent-yellow">
+                    <span className="material-symbols-outlined">school</span>
+                  </div>
+                  <span className="font-black text-accent-yellow uppercase tracking-widest text-sm">Professor Owl Says:</span>
                 </div>
-                <span className="font-black text-accent-yellow uppercase tracking-widest text-sm">Professor Owl Says:</span>
+                
+                {/* Answer Toggle */}
+                <div className="flex bg-background-light dark:bg-white/10 rounded-full p-1">
+                  <button 
+                    onClick={() => setShowDetailed(false)}
+                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${!showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}
+                  >
+                    Short
+                  </button>
+                  <button 
+                    onClick={() => setShowDetailed(true)}
+                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${showDetailed ? 'bg-accent-yellow text-white shadow-md' : 'text-[#49819c]'}`}
+                  >
+                    Detailed
+                  </button>
+                </div>
               </div>
-              <p className="text-xl font-bold text-[#0d171c] dark:text-white leading-relaxed">
-                "{answer}"
-              </p>
+
+              <div className="relative min-h-[80px]">
+                {!showDetailed ? (
+                  <p className="text-xl font-bold text-[#0d171c] dark:text-white leading-relaxed animate-in fade-in slide-in-from-left-4">
+                    "{explanation.brief}"
+                  </p>
+                ) : (
+                  <p className="text-lg font-medium text-[#49819c] dark:text-gray-300 leading-relaxed italic animate-in fade-in slide-in-from-right-4">
+                    {explanation.detailed}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -149,26 +179,33 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onGamesClick, o
             <h2 className="text-4xl md:text-5xl font-black text-[#0d171c] dark:text-white">Discover the Fun</h2>
             <p className="text-[#49819c] dark:text-gray-400 text-lg max-w-[600px]">We've combined education with pure excitement to create the ultimate learning experience in 2026.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <FeatureCard 
+              icon="auto_fix_high" 
+              title="Magic Studio" 
+              description="Turn your words into colorful art with our magic AI paintbrush!"
+              color="primary"
+              onClick={onMagicStudioClick}
+            />
             <FeatureCard 
               icon="videogame_asset" 
-              title="Level Up" 
-              description="Master new skills through interactive challenges and level up your custom avatar."
-              color="primary"
+              title="Arcade Zone" 
+              description="Master new skills through interactive challenges and level up your avatar."
+              color="accent-pink"
               onClick={onGamesClick}
             />
             <FeatureCard 
               icon="workspace_premium" 
-              title="Earn Badges" 
-              description="Collect rare, shiny badges for every goal you reach and show them off in your gallery."
-              color="accent-pink"
+              title="Rewards" 
+              description="Collect rare, shiny badges for every goal you reach in your gallery."
+              color="accent-yellow"
               onClick={onRewardsClick}
             />
             <FeatureCard 
               icon="group" 
-              title="New Friends" 
-              description="Meet new friends and learn together in a completely safe, moderated environment."
-              color="accent-yellow"
+              title="Lessons" 
+              description="Learn logic and grammar with Professor Owl in a safe environment."
+              color="primary"
               onClick={onLessonsClick}
             />
           </div>
@@ -211,14 +248,14 @@ const FeatureCard: React.FC<{ icon: string; title: string; description: string; 
   return (
     <button 
       onClick={onClick}
-      className={`group bouncy-hover text-left flex flex-col gap-6 rounded-[2.5rem] border-2 ${borderClass} bg-white dark:bg-white/5 p-10 transition-all ${hoverBorderClass} hover:shadow-[0_20px_60px_rgba(37,175,244,0.1)] cursor-pointer w-full`}
+      className={`group bouncy-hover text-left flex flex-col gap-6 rounded-[2.5rem] border-2 ${borderClass} bg-white dark:bg-white/5 p-8 transition-all ${hoverBorderClass} hover:shadow-[0_20px_60px_rgba(37,175,244,0.1)] cursor-pointer w-full`}
     >
       <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${colorClass} text-white shadow-lg`}>
         <span className="material-symbols-outlined text-3xl">{icon}</span>
       </div>
       <div className="flex flex-col gap-3">
-        <h3 className="text-2xl font-black text-[#0d171c] dark:text-white">{title}</h3>
-        <p className="text-[#49819c] dark:text-gray-400 font-medium leading-relaxed">
+        <h3 className="text-xl font-black text-[#0d171c] dark:text-white">{title}</h3>
+        <p className="text-sm text-[#49819c] dark:text-gray-400 font-medium leading-relaxed">
           {description}
         </p>
       </div>

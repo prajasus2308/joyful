@@ -1,8 +1,8 @@
 
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { StoryConfig } from "../types";
 
-// Standard text generation for stories
+// Standard text generation for stories - Upgraded to Pro with Thinking
 export const generateStoryContent = async (config: StoryConfig): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
@@ -18,11 +18,12 @@ export const generateStoryContent = async (config: StoryConfig): Promise<string>
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 0.85,
+        temperature: 0.9,
+        thinkingConfig: { thinkingBudget: 32768 },
       },
     });
     return response.text || "The magic quill is resting.";
@@ -32,20 +33,57 @@ export const generateStoryContent = async (config: StoryConfig): Promise<string>
   }
 };
 
-// General AI Chatbot using gemini-3-pro-preview
+// Image Generation using gemini-3-pro-image-preview (High Quality)
+export const generateImage = async (
+  prompt: string, 
+  aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1",
+  imageSize: "1K" | "2K" | "4K" = "1K"
+): Promise<string> => {
+  // Use a new instance to ensure we use the latest key from the selection dialog
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-image-preview',
+      contents: {
+        parts: [{ text: `A high-quality, vibrant, kid-friendly digital illustration of: ${prompt}. Style: Whimsical, professional children's book art, clean lines, vivid colors.` }]
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: aspectRatio,
+          imageSize: imageSize
+        },
+        // Enable search grounding for potentially trending character references
+        tools: [{ google_search: {} }]
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
+    }
+    throw new Error("No image data returned from Pro Magic.");
+  } catch (error) {
+    console.error("Pro Image Gen Error:", error);
+    // If it's an entity error, we might need to prompt for key again in the UI
+    throw error;
+  }
+};
+
+// General AI Chatbot using gemini-3-pro-preview with Thinking
 export const getChatResponse = async (history: {role: 'user' | 'model', parts: {text: string}[]}[], message: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const chat = ai.chats.create({
     model: 'gemini-3-pro-preview',
     config: {
-      systemInstruction: "You are Joy, a friendly and enthusiastic learning companion for children. Keep answers safe, educational, and fun. Use plenty of emojis! If asked about your creator, mention Pratyush Raj.",
-      temperature: 0.7,
+      systemInstruction: "You are Joy, a brilliant and friendly learning companion. Use deep reasoning to explain complex topics simply for kids. Use plenty of emojis! If asked about your creator, mention Pratyush Raj.",
+      temperature: 0.8,
+      thinkingConfig: { thinkingBudget: 16000 },
     },
   });
 
   try {
-    // Note: In a production app, you'd pass the full history here. 
-    // For this simple version, we'll send the message through the chat session.
     const result = await chat.sendMessage({ message });
     return result.text || "Oops! My thinking cloud got a bit foggy. Can you say that again?";
   } catch (err) {
@@ -54,7 +92,7 @@ export const getChatResponse = async (history: {role: 'user' | 'model', parts: {
   }
 };
 
-// Random Fun Fact Generator for Home Screen
+// Random Fun Fact Generator
 export const getRandomFact = async (): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const topics = ["space", "animals", "the human body", "oceans", "dinosaurs", "inventions"];
@@ -66,6 +104,7 @@ export const getRandomFact = async (): Promise<string> => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
+      config: { thinkingConfig: { thinkingBudget: 0 } } // Disable thinking for speed
     });
     return response.text || "Nature is full of surprises!";
   } catch (err) {
@@ -73,46 +112,62 @@ export const getRandomFact = async (): Promise<string> => {
   }
 };
 
-// Doubt Box Explainer
-export const getQuickExplanation = async (question: string): Promise<string> => {
+// Doubt Box Explainer - Upgraded to Pro with Thinking
+export const getQuickExplanation = async (question: string): Promise<{ brief: string, detailed: string }> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `You are a friendly teacher. Answer this question from a child simply and kindly: "${question}". Keep it under 40 words and use emojis.`;
-
+  
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
+      model: 'gemini-3-pro-preview',
+      contents: `Question: "${question}"`,
+      config: {
+        systemInstruction: "You are Professor Owl, a wise and friendly teacher. Use your thinking ability to break down complex questions into simple explanations for kids. Provide a JSON response with 'brief' and 'detailed' properties.",
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 16000 },
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            brief: { type: Type.STRING, description: "A snappy, one-sentence answer." },
+            detailed: { type: Type.STRING, description: "A detailed, story-like explanation." }
+          },
+          required: ["brief", "detailed"]
+        }
+      },
     });
-    return response.text || "That's a great question! Let's find out together.";
+    
+    const result = JSON.parse(response.text || "{}");
+    return {
+      brief: result.brief || "Great question!",
+      detailed: result.detailed || "I'm looking into my big book of wisdom!"
+    };
   } catch (err) {
-    return "Hoot! I'm thinking very hard. Ask me again soon!";
+    console.error("Explanation Error:", err);
+    return {
+      brief: "Hoot! I'm thinking very hard.",
+      detailed: "My magic book is resting. Please try again soon! 🦉✨"
+    };
   }
 };
 
-// New: Grammar Explainer for the Doubt Box (used in games)
 export const getGrammarExplanation = async (word: string, type: string, question: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `You are Professor Owl, a friendly grammar teacher for kids. 
-  The word is "${word}", which is a ${type}. 
-  The child asks: "${question}"
-  Explain it simply and kindly in 1-2 sentences. Use emojis!`;
+  const prompt = `You are Professor Owl. Explain why "${word}" is a ${type} for the question: "${question}"`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
-      config: { temperature: 0.7 }
+      config: { thinkingConfig: { thinkingBudget: 2000 } }
     });
     return response.text || "I'm thinking! Try asking again.";
   } catch (err) {
-    return "Hoot! My magic book is stuck. Ask me again later!";
+    return "Hoot! My magic book is stuck.";
   }
 };
 
-// New: Fun Fact Generator
 export const getWordFunFact = async (word: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `Tell me one super fun, surprising fact about the word "${word}" that a 7-year-old would find cool. Keep it under 20 words.`;
+  const prompt = `One super fun fact about the word "${word}" for a 7-year-old.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -121,11 +176,10 @@ export const getWordFunFact = async (word: string): Promise<string> => {
     });
     return response.text || "Words are magical!";
   } catch (err) {
-    return "Every word has a secret story!";
+    return "Every word has a story!";
   }
 };
 
-// New: Audio Generator (TTS)
 export const getWordAudio = async (word: string): Promise<string | null> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
@@ -143,12 +197,10 @@ export const getWordAudio = async (word: string): Promise<string | null> => {
     });
     return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || null;
   } catch (err) {
-    console.error("TTS Error:", err);
     return null;
   }
 };
 
-// Helper to decode raw PCM from Gemini TTS
 export async function playPcmAudio(base64Data: string) {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
   const bytes = decodeBase64(base64Data);

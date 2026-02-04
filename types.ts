@@ -14,3 +14,10 @@ export interface GeneratedContent {
   rating?: number; // 1-5 stars
   config?: StoryConfig; // The parameters used to generate this story
 }
+
+export interface GeneratedImage {
+  url: string;
+  prompt: string;
+  timestamp: number;
+  aspectRatio: string;
+}
